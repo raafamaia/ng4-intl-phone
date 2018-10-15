@@ -1,10 +1,19 @@
-import {Component, ElementRef, forwardRef, HostListener, Input, OnInit, Renderer2} from '@angular/core';
-import {Country} from '../../interface/country.interface';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
-import {CountryCode} from '../../interface/country-code.interface';
-import {CountryService} from '../../service/country.service';
-import {LocaleService} from '../../service/locale.service';
-import * as _ from 'lodash';
+import {
+    Component,
+    ElementRef,
+    forwardRef,
+    HostListener,
+    Input,
+    OnInit,
+    Renderer2
+} from '@angular/core';
+import { Country } from '../../interface/country.interface';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { CountryCode } from '../../interface/country-code.interface';
+import { CountryService } from '../../service/country.service';
+import { LocaleService } from '../../service/locale.service';
+import { isEmpty } from 'lodash';
+import { sortBy } from 'lodash';
 
 const COUNTER_CONTROL_ACCESSOR = {
     provide: NG_VALUE_ACCESSOR,
@@ -23,12 +32,11 @@ const PLUS = '+';
         '../../assets/flags/flags.min.css'
     ],
     host: {
-        '(document:click)': 'hideDropdown($event)',
+        '(document:click)': 'hideDropdown($event)'
     },
     providers: [COUNTER_CONTROL_ACCESSOR, CountryService, LocaleService]
 })
 export class IntPhonePrefixComponent implements OnInit, ControlValueAccessor {
-
     @Input()
     locale: string;
 
@@ -66,7 +74,11 @@ export class IntPhonePrefixComponent implements OnInit, ControlValueAccessor {
         }
     }
 
-    constructor(private service: CountryService, private localeService: LocaleService, phoneComponent: ElementRef) {
+    constructor(
+        private service: CountryService,
+        private localeService: LocaleService,
+        phoneComponent: ElementRef
+    ) {
         this.phoneComponent = phoneComponent;
     }
 
@@ -141,23 +153,36 @@ export class IntPhonePrefixComponent implements OnInit, ControlValueAccessor {
     }
 
     private orderCountriesByName() {
-        this.countries = _.sortBy(this.countries, 'name');
+        this.countries = sortBy(this.countries, 'name');
     }
 
     private updatePhoneInput(countryCode: string) {
         this.showDropdown = false;
 
-        let newInputValue: string = IntPhonePrefixComponent.startsWithPlus(this.phoneInput)
-            ? `${this.phoneInput.split(PLUS)[1].substr(this.selectedCountry.dialCode.length, this.phoneInput.length)}`
+        let newInputValue: string = IntPhonePrefixComponent.startsWithPlus(
+            this.phoneInput
+        )
+            ? `${this.phoneInput
+                  .split(PLUS)[1]
+                  .substr(
+                      this.selectedCountry.dialCode.length,
+                      this.phoneInput.length
+                  )}`
             : this.phoneInput;
 
-        this.selectedCountry = this.countries.find((country: Country) => country.countryCode === countryCode);
-        this.phoneInput = `${PLUS}${this.selectedCountry.dialCode} ${newInputValue.replace(/ /g, '')}`;
+        this.selectedCountry = this.countries.find(
+            (country: Country) => country.countryCode === countryCode
+        );
+        this.phoneInput = `${PLUS}${
+            this.selectedCountry.dialCode
+        } ${newInputValue.replace(/ /g, '')}`;
     }
 
     private findPrefix(prefix: string) {
-        let foundPrefixes: Country[] = this.countries.filter((country: Country) => prefix.startsWith(country.dialCode));
-        this.selectedCountry = !_.isEmpty(foundPrefixes)
+        let foundPrefixes: Country[] = this.countries.filter(
+            (country: Country) => prefix.startsWith(country.dialCode)
+        );
+        this.selectedCountry = !isEmpty(foundPrefixes)
             ? IntPhonePrefixComponent.reducePrefixes(foundPrefixes)
             : null;
     }
@@ -175,9 +200,7 @@ export class IntPhonePrefixComponent implements OnInit, ControlValueAccessor {
     private static reducePrefixes(foundPrefixes: Country[]) {
         return foundPrefixes.reduce(
             (first: Country, second: Country) =>
-                first.dialCode.length > second.dialCode.length
-                    ? first
-                    : second
+                first.dialCode.length > second.dialCode.length ? first : second
         );
     }
 }
